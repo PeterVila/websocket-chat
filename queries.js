@@ -1,5 +1,3 @@
-// Please note that if you changed the user, database, or password in the database creation section you will need to update the respective line items below.
-
 const Pool = require("pg").Pool;
 const pool = new Pool({
     connectionString: 'postgres://dev:dev@localhost/websocket',
@@ -38,4 +36,39 @@ const createMessage = (request, response) => {
 module.exports = {
     getMessages,
     createMessage,
+};
+
+/* SOCKET DB */
+const getSocketMessages = () => {
+    return new Promise((resolve) => {
+        pool.query(
+            "SELECT * FROM messages ORDER BY id DESC LIMIT 10",
+            (error, results) => {
+                if (error) {
+                    throw error;
+                }
+                resolve(results.rows);
+            }
+        );
+    });
+};
+const createSocketMessage = (message) => {
+    return new Promise((resolve) => {
+        pool.query(
+            "INSERT INTO messages (text, username) VALUES ($1, $2) RETURNING text, username, created_at ", [message.text, message.username],
+            (error, results) => {
+                if (error) {
+                    throw error;
+                }
+                resolve(results.rows);
+            }
+        );
+    });
+};
+
+module.exports = {
+    getMessages,
+    createMessage,
+    getSocketMessages,
+    createSocketMessage,
 };
